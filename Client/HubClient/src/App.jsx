@@ -5,7 +5,9 @@ import { HubConnectionBuilder } from "@microsoft/signalr";
 function App() {
   const [hubConnection, setHubConnection] = useState(null);
   const [messageList, setMessageList] = useState([]);
+  const [userList, setUserList] = useState([]);
   const [message, setMessage] = useState("");
+  const [userStatu, setUserStatu] = useState({ message: '', color: 'black' });
   const [connectionId, setConnectionId] = useState("");
   const [connectionStatus, setConnectionStatus] = useState({ message: '', color: 'black' });
 
@@ -34,20 +36,31 @@ function App() {
           setMessageList((prevMessages) => [...prevMessages, message]);
         }
       });
-    }
+      hubConnection.on("UserJoined", (connectionID) => {        
+        setUserStatu({ message: `${connectionID} giriş yaptı...`, color: 'green' })
+      });
 
-    hubConnection.onreconnecting(() => {
-      setConnectionStatus({ message: 'Bağlantı kuruluyor...', color: 'orange' });
-    });
+      hubConnection.on("UserLeaved", (connectionID) => {
+        setUserStatu({ message: `${connectionID} çıkış yaptı...`, color: 'red' })
+      });
+      
+      hubConnection.on("Clients", (clients) => {
+        setUserList(clients);
+      });
 
-    hubConnection.onreconnected(() => {
-      setConnectionStatus({ message: 'Bağlantı kuruldu', color: 'green' });
-    });
+      hubConnection.onreconnecting(() => {
+        setConnectionStatus({ message: 'Bağlantı kuruluyor...', color: 'orange' });
+      });
 
-    hubConnection.onclose(() => {
-      setConnectionStatus({ message: 'Bağlantı kapandı', color: 'red' });
-    });
-    
+      hubConnection.onreconnected(() => {
+        setConnectionStatus({ message: 'Bağlantı kuruldu', color: 'green' });
+      });
+
+      hubConnection.onclose(() => {
+        setConnectionStatus({ message: 'Bağlantı kapandı', color: 'red' });
+      });
+      console.log(userList);
+  }
   }, [hubConnection,connectionId]);
 
   const handleChange = (event) => {
@@ -73,6 +86,9 @@ function App() {
         <div className="statu" style={{ display: connectionStatus.message ? 'block' : 'none', color: connectionStatus.color }}>
           {connectionStatus.message}
         </div>
+        <div className="statu" style={{ display: userStatu.message ? 'block' : 'none', color: userStatu.color }}>          
+          {userStatu.message}
+        </div>
         <div className="inputContainer">
           <input
             type="text"
@@ -91,6 +107,13 @@ function App() {
             </div>
           ))}
         </div>
+        <div className="messageList">
+          {userList.map((client, index) => (
+            <div key={index} className="message">
+              {client}
+            </div>
+          ))}
+        </div>  
       </div>
     </>
   );
