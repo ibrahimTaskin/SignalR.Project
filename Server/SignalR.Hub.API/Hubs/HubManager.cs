@@ -5,11 +5,7 @@ namespace SignalR.Hubs.API.Hubs
     public class HubManager : Hub
     {
         static List<string> clients = new List<string>();
-        public async Task SendMessageAsync(string message)
-        {
-            await Clients.All.SendAsync("receiveMessage",message);
-        }
-
+      
         public override async Task OnConnectedAsync()
         {
             clients.Add(Context.ConnectionId);
